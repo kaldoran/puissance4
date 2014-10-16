@@ -1,0 +1,352 @@
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "../INC/IA.h"
+
+
+int hasard(int max) // fonction hassard , donne un nombre compris entre 0 et max de facon aléatoire.
+{
+  return (int)  ((float) rand() / RAND_MAX * (max + 1));
+}
+
+
+void IA_vs_H(int niveau)
+{
+  if(niveau != 11 || niveau != -1)
+    gestion_stats(3+(niveau-1),1); // on incremente la stats en rapport avec le niveau de l'IA
+  int joue_en = 0,gagnant = 0,commence = 0;
+  char pion = PION_J2;
+  char *grille = (char*) allocation(TAILLE_TAB+1,sizeof(char)); // +1 pour '\0'
+  init_grille(grille);
+  
+  _clean();
+  msg_IA_vs_H();
+  if(niveau == -1)
+    {
+      printf("\tL'IA vas vous \" aider \" a gagner ^^\n\n");
+      pion = PION_J1;
+    }
+
+  commence_IA();
+  
+  commence = verif_choix("\nQuel est votre choix ? ",2);
+  if(commence == -1)
+    return;
+  if(commence == 2)
+    {
+      _clean();
+      affichage(grille);
+      gagnant = humain_IA(grille); // retourne 1 si il gagne
+    }
+  if(gagnant == -1)
+    return;
+	printf("Niveau IA %d",niveau);
+  do
+    {
+      if(commence == -1)
+	return ;
+	
+      _clean();
+      msg_IA_vs_H();
+	  
+      if(niveau == -1) // Si le mode de triche est activé on joue au hasard que avec des CROIX [ pion joueur ]
+	joue_en = IA_jouer(grille,1,pion);
+      else
+	joue_en = IA_jouer(grille,niveau,pion);
+      pause_ms(500);
+      _clean();
+      msg_IA_vs_H();
+
+      printf("Je joue dans la colonne %d.\n",joue_en);
+	  
+      inserer(grille,joue_en,pion);
+      affichage(grille);
+      if(verif_grille(grille,pion))
+	gagnant = 2;
+	  
+      if(!(grille_pleine(grille)) && gagnant != 2 )
+	gagnant = humain_IA(grille); // retourne 1 si il gagne
+      
+      if(gagnant == -1)
+	return;
+    }while(!(grille_pleine(grille)) && gagnant == 0  );
+      
+  _clean();
+  affichage(grille);
+      
+  printf("Fin de partie.\n\n");
+  if(gagnant == 1 && niveau != -1)
+    {
+      printf("\tVous avez gagné , bravo ! :)\n");
+      gestion_stats(9+(niveau-1),1);
+      gestion_stats(14,1);
+    }
+  else if(gagnant == 2 && niveau != -1)
+    {
+      printf("\tVous vous êtes bien battu mais j'ai gagné.\n\n");
+      gestion_stats(15+(niveau-1),1);
+      gestion_stats(20,1);
+    }
+  else if (niveau != -1)
+    printf("\tMatch nul ! ... Belle partie cependant.\n");
+  
+  if(niveau == -1)
+    printf("\tBravo ! Mais je crois que je vous ai un peu trop aidé =D\n");
+ 
+
+      free(grille);
+      do_pause();
+}
+
+
+void IA_vs_IA(int niveau_IA_1,int niveau_IA_2)
+{
+  _reset_term();
+  int colonne = 0,niveau = niveau_IA_1;
+  char pion = PION_J1;
+
+  char *grille = (char*) allocation(TAILLE_TAB+1,sizeof(char));
+
+  init_grille(grille);
+
+  do
+    {
+      _clean();
+      msg_IA_vs_IA();
+      colonne = IA_jouer(grille,niveau,pion);
+      pause_ms(500);
+      _clean();
+      msg_IA_vs_IA();
+      printf("L'IA [ niveau %d ] possédant les %c joue en %d.\n",niveau,pion,colonne);
+      
+      inserer(grille,colonne,pion);
+      affichage(grille);
+      pause_ms(5000);
+      if(verif_grille(grille,pion))
+	colonne = -1;
+      else
+	{
+	  (pion == PION_J1) ? (pion = PION_J2) : (pion = PION_J1);
+	  (niveau == niveau_IA_1) ? (niveau = niveau_IA_2) : (niveau = niveau_IA_1);
+	}
+      
+    }while(!(grille_pleine(grille)) && colonne != -1);
+  printf("Mode démo fini.\n\n");
+
+  if(colonne == -1)
+    {
+      printf("\tL'IA possédant les '%c' de niveau %d a battu ",pion,niveau);
+      (pion == PION_J1) ? (pion = PION_J2) : (pion = PION_J1);
+      (niveau == niveau_IA_1) ? (niveau = niveau_IA_2) : (niveau = niveau_IA_1);
+      printf("l'IA possédant les '%c' niveau %d.\n\n",pion,niveau);
+    }
+  else
+    printf("\tAucune des deux IA n'a gagnée.\n");
+
+  free(grille);
+
+  do_pause();
+}
+
+
+
+
+int IA_jouer(char* grid,int profondeur,char pion)
+{
+  printf("Je refléchis ...\n");
+  int beta = 10000,colonne,colonne_a_jouer = 4,i = 2;
+
+  arbre a = (arbre) allocation(1,sizeof(noeud));  
+  a->val = -10000;
+  if(profondeur < 1)
+    {
+      do
+	{
+	  colonne = hasard(7);
+	}while(colonne_pleine(grid,colonne));
+      return colonne;
+    }
+  a->tableau = calloc(2,sizeof(noeud));
+  i = 0;
+
+  for(colonne=1;colonne<=NB_COLONNE;colonne++)
+    {
+      if(!colonne_pleine(grid,colonne))
+	{
+	  inserer(grid,colonne,pion); // on commence par les coups possible par l'ordinateur
+  
+	  a->tableau[i] = (arbre) Min(grid,profondeur,profondeur-1,a->val,beta,pion);
+
+          retirer(grid,colonne,pion);
+
+          if(a->val == 10000)
+	    {
+	          
+	      free(a->tableau[i]); 
+	      a->tableau = NULL;
+	      free(a);
+	      return colonne;
+	    }
+	  if(a->tableau[i]->val > a->val || a->val == -10000)
+            {
+	      a->val = a->tableau[i]->val;
+	      (i == 0) ? (i = 1) : (i = 0 );
+	      colonne_a_jouer = colonne;
+	      if(a->tableau[i] != NULL)
+		free(a->tableau[i]); 
+                     
+          
+             
+            }
+	  else
+	    {
+              free(a->tableau[i]);
+
+	    }
+
+	}
+    }
+  (i == 0) ? (i = 1) : (i = 0 );
+  free(a->tableau[i]);
+  a->tableau = NULL;
+  free(a);
+  return colonne_a_jouer;
+
+}
+
+
+
+
+arbre Min(char* grid,int profondeur_max,int profondeur,int alpha,int beta, char pion)
+{
+  arbre a = allocation(1,sizeof(noeud));
+
+  if(verif_grille(grid,pion))
+    {
+      a->val = 10000 - (profondeur_max - profondeur);
+      a->tableau = NULL;
+      return a;
+    }
+    
+  if(profondeur == 0)
+    {
+      a->val = eval(grid,pion);
+      a->tableau = NULL;
+      return a;
+    }
+
+  (pion == PION_J1) ? (pion = PION_J2) : (pion = PION_J1);
+ 
+  int colonne,i = 0;
+
+  a->tableau = calloc(2,sizeof(noeud));
+  a->val = beta;
+
+  for(colonne=1;colonne<=NB_COLONNE && alpha < a->val;colonne++)
+    {
+      if(!colonne_pleine(grid,colonne))
+	{
+	  inserer(grid,colonne,pion); // Min insere les pions de l'ennemie
+
+
+
+	  a->tableau[i] = Max(grid,profondeur_max,profondeur-1,alpha,a->val,pion);
+
+	  retirer(grid,colonne,pion); 
+	  
+	  if(a->tableau[i]->val < a->val)
+            {
+	      a->val = a->tableau[i]->val;
+	      (i == 0) ? (i = 1) : (i = 0 );
+
+	      if(a->tableau[i] != NULL)
+		free(a->tableau[i]);    
+                  
+
+            }
+	  else
+	    {
+     
+              free(a->tableau[i]);
+
+	    }
+
+
+	}
+      
+    }
+  (i == 0) ? (i = 1) : (i = 0 );
+  free(a->tableau[i]);
+  a->tableau = NULL;
+
+  return a;
+}
+
+
+arbre Max(char* grid,int profondeur_max,int profondeur,int alpha,int beta,char pion)
+{
+
+  arbre a = allocation(1,sizeof(noeud));
+  if(verif_grille(grid,pion))
+    {
+      a->val = -10000 - (profondeur_max - profondeur);
+      a->tableau = NULL;
+      return a;
+    }
+    
+  if(profondeur == 0)
+    {
+      a->val = eval(grid,pion);
+      a->tableau = NULL;
+      return a;
+    }
+
+
+  (pion == PION_J1) ? (pion = PION_J2) : (pion = PION_J1);
+  
+  a->val = alpha;
+
+  int colonne, i = 0;
+
+  a->tableau = calloc(2,sizeof(noeud));
+
+
+  for(colonne=1;colonne<=NB_COLONNE && a->val < beta;colonne++)
+    {
+      if(!colonne_pleine(grid,colonne))
+	{
+	  inserer(grid,colonne,pion);
+	  a->tableau[i] = Min(grid,profondeur_max,profondeur-1,a->val,beta,pion);
+          retirer(grid,colonne,pion);
+	  
+	  if(a->tableau[i]->val > a->val)
+            {
+
+	      a->val = a->tableau[i]->val;
+	      (i == 0) ? (i = 1) : (i = 0 );
+	      if(a->tableau[i] != NULL)
+		free(a->tableau[i]); 
+                               
+             
+            }
+	  else
+	    {
+
+              free(a->tableau[i]);
+
+	    }
+
+	}
+    }
+
+  (i == 0) ? (i = 1) : (i = 0 );
+
+  free(a->tableau[i]);
+  a->tableau = NULL;
+
+  return a; 
+}
+

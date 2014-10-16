@@ -1,0 +1,52 @@
+0                                                   
+0                                                   
+0                                                   
+0                                                   
+0                                                   
+0                                                   
+0                                                   
+0                                                   
+0                                                   
+0                                                   
+0                                                   
+0                                                   
+0                                                   
+0                                                   
+0                                                   
+0                                                   
+0                                                   
+0                                                   
+0                                                   
+0                                                   
+0                                                   
+0                                                   
+
+
+
+
+Nombre de partie Humain Vs Humain jouée 
+Nombre de partie jouer en tres facile
+                 jouer en facile 
+	         jouer en moyen  
+	         jouer en difficile 
+		 jouer en Très difficile 
+		 Total 
+	
+Nombre de victoire contre l'ordinateur en tres facile
+				       en facile
+				       en moyen
+				       en difficile
+				       en Très difficile 
+				       Total
+
+Nombre de défaite contre l'ordinateur en tres facile
+				      en facile
+				      en moyen
+				      en difficile
+				      en Très difficile
+				      Total
+
+Nombre de démo que vous avez vu 
+
+20 lignes
+

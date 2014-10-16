@@ -1,0 +1,13 @@
+
+Le but du jeu est d'aligner 4 pions sur une grille comptant 6 rangées et 7 colonnes. 
+
+Chaque joueur dispose de 21 pions [Soit X , soit O].
+
+Tour à tour les deux joueurs placent un pion dans la colonne de leur choix,
+le pion coulisse alors jusqu'à la position la plus basse possible dans la colonne c'est ensuite a l'adversaire de jouer.
+
+Le vainqueur est le joueur qui réalise le premier un alignement (horizontal, vertical ou diagonal) d'au moins quatre pions de sa couleur.
+
+Si personnes n'y arrive avant que toutes les cases de la grille de jeu sont remplies, la partie est déclarée nulle.
+
+
